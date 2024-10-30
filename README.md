@@ -1,5 +1,5 @@
 # PFP YouTube Player
-
+播放器网页：<https://ichouchiang.github.io/pfp-youtube-player/>
 ## 介绍 / Introduction
 本播放器可将 360p 至 8K 通常长宽比的视频进行 1:1 像素映射，在分辨率较小的设备上播放高画质视频的局部，观赏视频的细节。  
 
