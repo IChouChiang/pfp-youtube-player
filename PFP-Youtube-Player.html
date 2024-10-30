@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>PFP Youtube Player</title>
+    <script type="text/javascript">
+      var tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      var player;
+      var isDPIReset = false;
+
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player("custom-iframe", {
+          events: {
+            onReady: onPlayerReady,
+            onPlaybackQualityChange: onPlaybackQualityChange,
+          },
+        });
+      }
+
+      function onPlayerReady(event) {
+        applyDPRScaling(event.target.getIframe());
+        updateQualityAndSize();
+      }
+
+      function onPlaybackQualityChange(event) {
+        updateQualityAndSize();
+      }
+
+      function applyDPRScaling(iframe) {
+        const dpr = window.devicePixelRatio || 1;
+        if (dpr > 1) {
+          iframe.style.transform = `scale(${1 / dpr})`;
+          iframe.style.transformOrigin = "top left";
+        }
+      }
+
+      function toggleDPI() {
+        const iframe = document.getElementById("custom-iframe");
+        const videoContainer = document.querySelector(".video-container");
+
+        if (isDPIReset) {
+          applyDPRScaling(iframe);
+        } else {
+          iframe.style.transform = "none";
+          videoContainer.scrollTo({
+            top: videoContainer.scrollHeight,
+            left: videoContainer.scrollWidth,
+            behavior: "smooth",
+          });
+        }
+        isDPIReset = !isDPIReset;
+      }
+
+      function extractVideoID(url) {
+        const regex =
+          /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|.+?v=)|youtu\.be\/)([^?&\s]+)/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+      }
+
+      function loadVideo() {
+        const input = document.getElementById("youtubeLink").value;
+        const videoID = extractVideoID(input);
+
+        if (videoID) {
+          player.loadVideoById(videoID);
+          updateQualityAndSize();
+        } else {
+          alert("Invalid YouTube link. Please try again.");
+        }
+      }
+
+      function updateQualityAndSize() {
+        const quality = player.getPlaybackQuality();
+        const qualityDisplay = document.getElementById("qualityDisplay");
+        qualityDisplay.textContent = `Current Quality: ${quality || "Unknown"}`;
+
+        let width, height;
+        switch (quality) {
+          case "hd4320": // 8K
+            width = 8192;
+            height = 4320;
+            break;
+          case "hd2160": // 4K
+            width = 4096;
+            height = 2160;
+            break;
+          case "hd1440":
+            width = 2730;
+            height = 1440;
+            break;
+          case "hd1080":
+            width = 2048;
+            height = 1080;
+            break;
+          case "hd720":
+            width = 1365;
+            height = 720;
+            break;
+          case "large": // 480p
+            width = 910;
+            height = 480;
+            break;
+          case "medium": // 360p
+            width = 682;
+            height = 360;
+            break;
+          case "small": // 240p
+            width = 682;
+            height = 360;
+            break;
+          case "tiny": // 144p
+            width = 682;
+            height = 360;
+            break;
+          default:
+            width = 8192; // Default to 8k
+            height = 4320;
+        }
+
+        console.log(`Setting iframe size to ${width}x${height}`);
+        const iframe = document.getElementById("custom-iframe");
+        iframe.style.width = `${width}px`;
+        iframe.style.height = `${height}px`;
+      }
+    </script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: black;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .input-container {
+        display: flex;
+        gap: 5px;
+        align-items: center; /* Align elements in the center vertically */
+        margin-bottom: 5px;
+      }
+
+      input {
+        width: 200px; /* Compact width */
+        padding: 3px;
+        font-size: 12px;
+      }
+
+      button {
+        padding: 3px 6px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      #qualityDisplay {
+        color: white;
+        font-size: 12px;
+      }
+
+      .video-container {
+        width: 100vw;
+        height: 100vh;
+        overflow: auto;
+        position: relative;
+      }
+
+      iframe {
+        border: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform-origin: top left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="input-container">
+      <input
+        type="text"
+        id="youtubeLink"
+        placeholder="Enter YouTube link here..."
+      />
+      <button onclick="loadVideo()">Load Video</button>
+      <div id="qualityDisplay">Current Quality: Unknown</div>
+      <button onclick="toggleDPI()">Zoom & Select / Reset</button>
+      <!-- DPI Toggle Button -->
+    </div>
+
+    <div class="video-container">
+      <iframe
+        id="custom-iframe"
+        src="https://www.youtube.com/embed?enablejsapi=1"
+        frameborder="0"
+      >
+      </iframe>
+    </div>
+  </body>
+</html>
